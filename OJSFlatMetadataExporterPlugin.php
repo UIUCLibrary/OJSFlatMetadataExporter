@@ -96,7 +96,7 @@ class OJSFlatMetadataExporterPlugin extends ImportExportPlugin {
      */
     public function exportIssues($issueIds, $context, $request) {
         $fileManager = new FileManager();
-        $exportDir = $fileManager->getBasePath() . 'ojs-export-' . time();
+        $exportDir = $fileManager->getBasePath() . DIRECTORY_SEPARATOR . 'ojs-export-' . time();
         $fileManager->mkdir($exportDir);
 
         $issues = array_map(function($issueId) {
@@ -121,7 +121,7 @@ class OJSFlatMetadataExporterPlugin extends ImportExportPlugin {
 
             $submissions = Repo::submission()->getMany([
                 'contextId' => $context->getId(),
-                'issueIds' => $issue->getId(),
+                'issueIds' => [$issue->getId()],
                 'status' => 'published',
             ]);
 
@@ -178,7 +178,7 @@ class OJSFlatMetadataExporterPlugin extends ImportExportPlugin {
         $galleys = Repo::galley()->getMany(['publicationIds' => $publication->getId()]);
         foreach ($galleys as $galley) {
             $submissionFile = Repo::submissionFile()->get($galley->getFileId());
-             if ($submissionFile) {
+            if ($submissionFile) {
                 $galleyFileNames[] = $this->_cleanFileName($submission->getId() . '-' . $galley->getId() . '-' . $submissionFile->getData('name', $submissionFile->getLocale()));
             }
         }
