@@ -1,11 +1,5 @@
 {**
  * plugins/importexport/OJSFlatMetadataExporter/templates/index.tpl
- *
- * Copyright (c) 2014-2021 Simon Fraser University
- * Copyright (c) 2003-2021 John Willinsky
- * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
- *
- * UI for the Flat Metadata Exporter plugin
  *}
 {extends file="layouts/backend.tpl"}
 
@@ -21,29 +15,20 @@
 			{fbvFormArea id="issuesForm"}
 				<h3>{translate key="plugins.importexport.OJSFlatMetadataExporter.export.issues"}</h3>
 
-				{* Check if there are any issues before trying to show them *}
-			{if $issues|@count > 0}
+			{if $issues->count() > 0}
 				<p>{translate key="plugins.importexport.OJSFlatMetadataExporter.export.issues.description"}</p>
 
-				{* --- NEW RECOMMENDATION: Replace fbvElement with standard HTML --- *}
+				{* This block is now modeled exactly on the official Native Export plugin's template *}
 				{iterate from=$issues item=issue}
-					<div class="pkp_form_checkbox">
-						<input
-								type="checkbox"
-								name="issueIds[]"
-								id="issue-{$issue->getId()|escape}"
-								value="{$issue->getId()|escape}"
-								class="pkp_form_checkbox"
-						>
-						<label for="issue-{$issue->getId()|escape}">
-							{$issue->getLocalizedTitle()|escape}
-						</label>
-					</div>
+				{capture assign="checkboxId"}issue-{$issue->getId()}{/capture}
+				{fbvElement type="checkbox" id=$checkboxId name="issueIds[]" value=$issue->getId() label=$issue->getLocalizedTitle()|escape}
 				{/iterate}
 
-				{fbvFormButtons submitText="plugins.importexport.OJSFlatMetadataExporter.export.export"}
-
-				{fbvFormButtons submitText="plugins.importexport.OJSFlatMetadataExporter.export.export"}
+				<div class="pkp_form_buttons">
+					<button class="pkp_button pkp_button_primary" type="submit">
+						{translate key="plugins.importexport.OJSFlatMetadataExporter.export.export"}
+					</button>
+				</div>
 			{else}
 				<p>{translate key="common.noItemsFound"}</p>
 			{/if}

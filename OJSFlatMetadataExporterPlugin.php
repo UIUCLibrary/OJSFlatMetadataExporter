@@ -2,11 +2,12 @@
 
 namespace APP\plugins\importexport\OJSFlatMetadataExporter;
 
-use APP\facades\Repo;
-use PKP\plugins\ImportExportPlugin;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use APP\core\Application;
+use APP\issue\Issue;
+use PKP\plugins\importexport\native\PKPNativeImportExportPlugin;
+use PKP\submission\Submission;
 
-class OJSFlatMetadataExporterPlugin extends ImportExportPlugin
+class OJSFlatMetadataExporterPlugin extends PKPNativeImportExportPlugin
 {
     /**
      * @copydoc Plugin::register()
@@ -43,53 +44,41 @@ class OJSFlatMetadataExporterPlugin extends ImportExportPlugin
     }
 
     /**
-     * @copydoc Plugin::display()
+     * Display the plugin's management interface
+     *
+     * @param array $args
+     * @param \PKP\core\PKPRequest $request
      */
     public function display($args, $request)
     {
-        parent::display($args, $request);
-
-        $context = $request->getContext();
-        $templateMgr = \APP\template\TemplateManager::getManager($request);
-
-        switch ($this->opType) {
-            case 'export':
-                // Logic for the export will be added here in our next step.
-                // For now, it will just redirect back to the plugin page.
-                $request->redirect(null, null, 'importexport', ['plugin', $this->getName()]);
-                return;
-
-            case null: // This is the default view when you load the plugin page.
-                $issueCollector = Repo::issue()->getCollector()
-                    ->filterByContextIds([$context->getId()])
-                    ->filterByPublished(true)
-                    ->orderBy('datePublished', 'desc');
-                $issues = iterator_to_array($issueCollector->getMany());
-                $templateMgr->assign('issues', $issues);
-                $templateMgr->display($this->getTemplateResource('index.tpl'));
-                return;
-
-            default:
-                throw new NotFoundHttpException();
-        }
+        // This is the exact pattern used by the NativeImportExportPlugin.
+        // It delegates the entire list-building and display logic to the parent class.
+        // We are telling it to list 'issue' entities.
+        parent::listAll(
+            $request,
+            [
+                'title' => __('plugins.importexport.OJSFlatMetadataExporter.export.issues'),
+                'description' => __('plugins.importexport.OJSFlatMetadataExporter.export.issues.description'),
+                'entities' => 'issue', // This tells the parent class what to fetch
+            ]
+        );
     }
 
     /**
-     * @copydoc ImportExportPlugin::executeCLI()
+     * @copydoc PKPNativeImportExportPlugin::getCLIExportResult
      */
-    public function executeCLI($scriptName, &$args)
+    public function getCLIExportResult(string $command, array $cliArgs, string $workPath): ?string
     {
-        // This plugin does not support command-line usage.
-        $this->usage($scriptName);
+        // To be implemented later. Required by the parent class.
+        return null;
     }
 
     /**
-     * @copydoc ImportExportPlugin::usage()
+     * @copydoc PKPNativeImportExportPlugin::getExportResult
      */
-    public function usage($scriptName)
+    public function getExportResult(\PKP\core\PKPRequest $request, string $command, array $selectedIds, string $workPath): ?string
     {
-        echo __("plugins.importexport.OJSFlatMetadataExporter.cliUsage", [
-                'scriptName' => $scriptName
-            ]) . "\n";
+        // To be implemented later. Required by the parent class.
+        return null;
     }
 }
