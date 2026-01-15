@@ -45,9 +45,6 @@ class OJSFlatMetadataExporterPlugin extends NativeImportExportPlugin
      */
     public function display($args, $request)
     {
-        // By calling the parent's display method, we inherit the entire working UI
-        // from the NativeImportExportPlugin, including the tabs and lists for
-        // articles and issues. This is the most stable approach.
         return parent::display($args, $request);
     }
 
@@ -61,8 +58,6 @@ class OJSFlatMetadataExporterPlugin extends NativeImportExportPlugin
      */
     public function getCLIExportResult(string $command, array $cliArgs, string $workPath): ?string
     {
-        // We will add our custom export logic here later. For now, it does nothing.
-        // Returning null prevents the parent's XML export from running.
         return null;
     }
 
@@ -77,8 +72,6 @@ class OJSFlatMetadataExporterPlugin extends NativeImportExportPlugin
      */
     public function getExportResult(\PKP\core\PKPRequest $request, string $command, array $selectedIds, string $workPath): ?string
     {
-        // We will add our custom export logic here later. For now, it does nothing.
-        // Returning null prevents the parent's XML export from running.
         return null;
     }
 }
