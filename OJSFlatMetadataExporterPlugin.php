@@ -287,4 +287,21 @@ class OJSFlatMetadataExporterPlugin extends ImportExportPlugin {
         }
         return parent::manage($args, $request);
     }
+
+    /**
+     * @copydoc ImportExportPlugin::executeCLI()
+     */
+    public function executeCLI($scriptName, &$args) {
+        // We don't have a CLI tool for this plugin.
+        // Display the usage instructions.
+        $this->usage($scriptName);
+    }
+
+    /**
+     * @copydoc ImportExportPlugin::usage()
+     */
+    public function usage($scriptName) {
+        echo "This plugin does not provide a command-line interface (CLI) tool.\n";
+        echo "Please use the web-based interface from the Tools > Import/Export menu in OJS.\n";
+    }
 }
