@@ -2,12 +2,9 @@
 
 namespace APP\plugins\importexport\OJSFlatMetadataExporter;
 
-use APP\core\Application;
-use APP\issue\Issue;
-use PKP\plugins\importexport\native\PKPNativeImportExportPlugin;
-use PKP\submission\Submission;
+use APP\plugins\importexport\native\NativeImportExportPlugin;
 
-class OJSFlatMetadataExporterPlugin extends PKPNativeImportExportPlugin
+class OJSFlatMetadataExporterPlugin extends NativeImportExportPlugin
 {
     /**
      * @copydoc Plugin::register()
@@ -44,41 +41,44 @@ class OJSFlatMetadataExporterPlugin extends PKPNativeImportExportPlugin
     }
 
     /**
-     * Display the plugin's management interface
-     *
-     * @param array $args
-     * @param \PKP\core\PKPRequest $request
+     * @copydoc ImportExportPlugin::display()
      */
     public function display($args, $request)
     {
-        // This is the exact pattern used by the NativeImportExportPlugin.
-        // It delegates the entire list-building and display logic to the parent class.
-        // We are telling it to list 'issue' entities.
-        parent::listAll(
-            $request,
-            [
-                'title' => __('plugins.importexport.OJSFlatMetadataExporter.export.issues'),
-                'description' => __('plugins.importexport.OJSFlatMetadataExporter.export.issues.description'),
-                'entities' => 'issue', // This tells the parent class what to fetch
-            ]
-        );
+        // By calling the parent's display method, we inherit the entire working UI
+        // from the NativeImportExportPlugin, including the tabs and lists for
+        // articles and issues. This is the most stable approach.
+        return parent::display($args, $request);
     }
 
     /**
-     * @copydoc PKPNativeImportExportPlugin::getCLIExportResult
+     * Get the export result for a command-line export
+     *
+     * @param string $command
+     * @param array $cliArgs
+     * @param string $workPath
+     * @return ?string Path to the created file or null
      */
     public function getCLIExportResult(string $command, array $cliArgs, string $workPath): ?string
     {
-        // To be implemented later. Required by the parent class.
+        // We will add our custom export logic here later. For now, it does nothing.
+        // Returning null prevents the parent's XML export from running.
         return null;
     }
 
     /**
-     * @copydoc PKPNativeImportExportPlugin::getExportResult
+     * Get the export result for a web-based export
+     *
+     * @param \PKP\core\PKPRequest $request
+     * @param string $command
+     * @param array $selectedIds
+     * @param string $workPath
+     * @return ?string Path to the created file or null
      */
     public function getExportResult(\PKP\core\PKPRequest $request, string $command, array $selectedIds, string $workPath): ?string
     {
-        // To be implemented later. Required by the parent class.
+        // We will add our custom export logic here later. For now, it does nothing.
+        // Returning null prevents the parent's XML export from running.
         return null;
     }
 }
