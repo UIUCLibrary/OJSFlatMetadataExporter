@@ -1,14 +1,14 @@
-msgid "plugins.importexport.OJSFlatMetadataExporter.displayName"
+msgid "plugins.importexport.ojsFlatMetadataExporter.displayName"
 msgstr "Flat Metadata Exporter"
 
-msgid "plugins.importexport.OJSFlatMetadataExporter.description"
+msgid "plugins.importexport.ojsFlatMetadataExporter.description"
 msgstr "This plugin exports issue metadata as a CSV file and article galleys as a zip file, structured for easy upload to systems like IDEALS."
 
-msgid "plugins.importexport.OJSFlatMetadataExporter.export.issues"
+msgid "plugins.importexport.ojsFlatMetadataExporter.export.issues"
 msgstr "Export Issues"
 
-msgid "plugins.importexport.OJSFlatMetadataExporter.export.issues.description"
+msgid "plugins.importexport.ojsFlatMetadataExporter.export.issues.description"
 msgstr "Select the issues you wish to export."
 
-msgid "plugins.importexport.OJSFlatMetadataExporter.export.export"
+msgid "plugins.importexport.ojsFlatMetadataExporter.export.export"
 msgstr "Export"
