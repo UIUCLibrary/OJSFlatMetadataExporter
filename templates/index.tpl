@@ -27,7 +27,7 @@
 
 				{iterate from=$issues item=issue}
 				{capture assign="checkboxId"}issue-{$issue->getId()}{/capture}
-				{fbvElement type="checkbox" id=$checkboxId name="issueIds[]" value=$issue->getId() label=$issue->getIssueIdentification()}
+				{fbvElement type="checkbox" id=$checkboxId name="issueIds[]" value=$issue->getId() label=$issue->getLocalizedTitle()}
 				{/iterate}
 
 				{fbvFormButtons submitText="plugins.importexport.OJSFlatMetadataExporter.export.export"}
