@@ -63,8 +63,7 @@ class OJSFlatMetadataExporterPlugin extends ImportExportPlugin
                 $issueCollector = Repo::issue()->getCollector()
                     ->filterByContextIds([$context->getId()])
                     ->filterByPublished(true)
-                    ->orderBy(Repo::issue()::ORDER_BY_DATE_PUBLISHED, Repo::issue()::ORDER_DIRECTION_DESC);
-
+                    ->orderBy('datePublished', 'desc');
                 $issues = $issueCollector->getMany();
                 $templateMgr->assign('issues', $issues);
                 $templateMgr->display($this->getTemplateResource('index.tpl'));
