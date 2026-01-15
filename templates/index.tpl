@@ -18,13 +18,22 @@
 
 		<form id="exportForm" class="pkp_form" action="{plugin_url path="export"}" method="post">
 			{csrf}
-			{fbvFormArea id="issuesXmlForm"}
+			{fbvFormArea id="issuesForm"}
 				<h3>{translate key="plugins.importexport.OJSFlatMetadataExporter.export.issues"}</h3>
-                <p>{translate key="plugins.importexport.OJSFlatMetadataExporter.export.issues.description"}</p>
+
+				{* Check if there are any issues before trying to show them *}
+			{if $issues->count()}
+				<p>{translate key="plugins.importexport.OJSFlatMetadataExporter.export.issues.description"}</p>
+
 				{iterate from=$issues item=issue}
-					{fbvElement type="checkbox" id="selectedIssues[]" value=$issue->getId() label=$issue->getIssueIdentification()}
+				{capture assign="checkboxId"}issue-{$issue->getId()}{/capture}
+				{fbvElement type="checkbox" id=$checkboxId name="issueIds[]" value=$issue->getId() label=$issue->getIssueIdentification()}
 				{/iterate}
+
 				{fbvFormButtons submitText="plugins.importexport.OJSFlatMetadataExporter.export.export"}
+			{else}
+				<p>{translate key="common.noItemsFound"}</p>
+			{/if}
 			{/fbvFormArea}
 		</form>
 	</div>
