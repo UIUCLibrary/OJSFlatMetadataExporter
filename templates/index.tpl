@@ -25,10 +25,23 @@
 			{if $issues|@count > 0}
 				<p>{translate key="plugins.importexport.OJSFlatMetadataExporter.export.issues.description"}</p>
 
+				{* --- NEW RECOMMENDATION: Replace fbvElement with standard HTML --- *}
 				{iterate from=$issues item=issue}
-				{capture assign="checkboxId"}issue-{$issue->getId()}{/capture}
-				{fbvElement type="checkbox" id=$checkboxId name="issueIds[]" value=$issue->getId() label=$issue->getLocalizedTitle()}
+					<div class="pkp_form_checkbox">
+						<input
+								type="checkbox"
+								name="issueIds[]"
+								id="issue-{$issue->getId()|escape}"
+								value="{$issue->getId()|escape}"
+								class="pkp_form_checkbox"
+						>
+						<label for="issue-{$issue->getId()|escape}">
+							{$issue->getLocalizedTitle()|escape}
+						</label>
+					</div>
 				{/iterate}
+
+				{fbvFormButtons submitText="plugins.importexport.OJSFlatMetadataExporter.export.export"}
 
 				{fbvFormButtons submitText="plugins.importexport.OJSFlatMetadataExporter.export.export"}
 			{else}
