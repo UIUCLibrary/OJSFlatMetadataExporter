@@ -22,7 +22,7 @@
 				<h3>{translate key="plugins.importexport.OJSFlatMetadataExporter.export.issues"}</h3>
 
 				{* Check if there are any issues before trying to show them *}
-			{if $issues->count()}
+			{if $issues|@count > 0}
 				<p>{translate key="plugins.importexport.OJSFlatMetadataExporter.export.issues.description"}</p>
 
 				{iterate from=$issues item=issue}
