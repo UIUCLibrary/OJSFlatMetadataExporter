@@ -12,3 +12,12 @@ msgstr "Select the issues you wish to export."
 
 msgid "plugins.importexport.OJSFlatMetadataExporter.export.export"
 msgstr "Export"
+
+msgid "plugins.importexport.OJSFlatMetadataExporter.export.noIssues"
+msgstr "No issues were selected for export."
+
+msgid "plugins.importexport.OJSFlatMetadataExporter.export.zipError"
+msgstr "The export archive could not be created."
+
+msgid "plugins.importexport.OJSFlatMetadataExporter.cliUnsupported"
+msgstr "This plugin does not support command-line use. Use the Import/Export tool in the OJS web interface."
