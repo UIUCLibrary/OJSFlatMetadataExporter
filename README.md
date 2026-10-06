@@ -36,14 +36,14 @@ The plugin is web-only; command-line export is not supported.
 
 ## Output
 
-The archive contains:
+The archive contains one folder per selected issue, named `<journal acronym>_<issue identification>_<issue id>`:
 
-- `metadata.csv` – one row per published article in the selected issues, with the columns
-  `issue_id`, `issue_volume`, `issue_number`, `issue_year`, `issue_title`, `submission_id`, `title`, `authors`,
-  `abstract`, `doi`, `section`, `date_published`, `pages`, `language`, `files`.
-  Multiple authors and files are separated by `; `.
-- `files/<submission_id>/<galley_id>-<name>.<ext>` – the galley files of each article. The `files` column of
-  `metadata.csv` lists the archive paths belonging to each row.
+- `metadata.csv` – one row per published article, with Dublin Core columns:
+  `galley_filename`, `dc.title`, `dc.creator`, `dc.identifier.doi`, `dc.subject`, `dc.description.abstract`,
+  `dc.date.issued`, `dc.language`, `dc.genre` (the article's section), `dc.rights` (license URL), `dc.type`
+  and `dc.relation.ispartof`. Multiple values within a cell (authors, keywords, galley files) are separated by `||`.
+- `galleys/` – the galley files, named `<submission id>-<galley id>-<name>.<ext>`. The `galley_filename` column
+  lists the files belonging to each row.
 
 Only articles with a published status are exported.
 

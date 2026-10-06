@@ -15,24 +15,24 @@ use ZipArchive;
 
 class OJSFlatMetadataExporterPlugin extends ImportExportPlugin
 {
-    /** Column headers of the exported metadata CSV */
+    /** Column headers of the exported metadata CSV (Dublin Core, for IDEALS) */
     private const CSV_COLUMNS = [
-        'issue_id',
-        'issue_volume',
-        'issue_number',
-        'issue_year',
-        'issue_title',
-        'submission_id',
-        'title',
-        'authors',
-        'abstract',
-        'doi',
-        'section',
-        'date_published',
-        'pages',
-        'language',
-        'files',
+        'galley_filename',
+        'dc.title',
+        'dc.creator',
+        'dc.identifier.doi',
+        'dc.subject',
+        'dc.description.abstract',
+        'dc.date.issued',
+        'dc.language',
+        'dc.genre',
+        'dc.rights',
+        'dc.type',
+        'dc.relation.ispartof',
     ];
+
+    /** Separator between multiple values within a single CSV cell */
+    private const VALUE_SEPARATOR = '||';
 
     /**
      * @copydoc Plugin::register()
@@ -140,7 +140,7 @@ class OJSFlatMetadataExporterPlugin extends ImportExportPlugin
     }
 
     /**
-     * Write a zip archive containing metadata.csv and the galley files of the given issues.
+     * Write a zip archive containing, for each issue, a folder with metadata.csv and a galleys/ folder.
      *
      * @param \APP\issue\Issue[] $issues
      */
@@ -152,10 +152,18 @@ class OJSFlatMetadataExporterPlugin extends ImportExportPlugin
         }
 
         $filesDir = rtrim(Config::getVar('files', 'files_dir'), '/') . '/';
-        $csv = fopen('php://temp', 'w+');
-        fputcsv($csv, self::CSV_COLUMNS);
+        $acronym = $context->getAcronym($context->getPrimaryLocale()) ?: $context->getPath();
 
         foreach ($issues as $issue) {
+            $issueDir = $this->sanitizeFileName($acronym . '_' . $issue->getIssueIdentification());
+            // Avoid collisions between issues that sanitize to the same name
+            $issueDir .= '_' . $issue->getId();
+            $zip->addEmptyDir($issueDir);
+            $zip->addEmptyDir($issueDir . '/galleys');
+
+            $csv = fopen('php://temp', 'w+');
+            fputcsv($csv, self::CSV_COLUMNS);
+
             $submissions = Repo::submission()
                 ->getCollector()
                 ->filterByIssueIds([$issue->getId()])
@@ -168,8 +176,9 @@ class OJSFlatMetadataExporterPlugin extends ImportExportPlugin
                 if (!$publication) {
                     continue;
                 }
+                $locale = $publication->getData('locale') ?: $submission->getData('locale');
 
-                $zipFileNames = [];
+                $galleyNames = [];
                 foreach ($publication->getData('galleys') ?? [] as $galley) {
                     $submissionFileId = $galley->getData('submissionFileId');
                     $submissionFile = $submissionFileId ? Repo::submissionFile()->get($submissionFileId) : null;
@@ -178,51 +187,66 @@ class OJSFlatMetadataExporterPlugin extends ImportExportPlugin
                         continue;
                     }
                     $extension = pathinfo($localPath, PATHINFO_EXTENSION);
-                    $baseName = $this->sanitizeFileName(
+                    $name = $this->sanitizeFileName(
                         $submissionFile->getLocalizedData('name') ?: ('galley-' . $galley->getId())
                     );
-                    $baseName = preg_replace('/\.' . preg_quote($extension, '/') . '$/i', '', $baseName);
-                    $zipName = 'files/' . $submission->getId() . '/' . $galley->getId() . '-' . $baseName
+                    $name = preg_replace('/\.' . preg_quote($extension, '/') . '$/i', '', $name);
+                    $galleyName = $submission->getId() . '-' . $galley->getId() . '-' . $name
                         . ($extension !== '' ? '.' . $extension : '');
-                    if ($zip->addFile($localPath, $zipName)) {
-                        $zipFileNames[] = $zipName;
+                    if ($zip->addFile($localPath, $issueDir . '/galleys/' . $galleyName)) {
+                        $galleyNames[] = $galleyName;
                     }
                 }
 
-                $authors = [];
+                $creators = [];
                 foreach ($publication->getData('authors') ?? [] as $author) {
-                    $authors[] = $author->getFullName(false);
+                    $creators[] = $author->getFullName(false);
                 }
                 $section = Repo::section()->get((int) $publication->getData('sectionId'));
                 $doi = $publication->getData('doiObject');
 
                 fputcsv($csv, [
-                    $issue->getId(),
-                    $issue->getVolume(),
-                    $issue->getNumber(),
-                    $issue->getYear(),
-                    $issue->getLocalizedTitle(),
-                    $submission->getId(),
-                    $publication->getLocalizedFullTitle(),
-                    implode('; ', $authors),
-                    trim(strip_tags((string) $publication->getLocalizedData('abstract'))),
+                    implode(self::VALUE_SEPARATOR, $galleyNames),
+                    $publication->getLocalizedTitle($locale),
+                    implode(self::VALUE_SEPARATOR, $creators),
                     $doi ? $doi->getData('doi') : '',
+                    implode(self::VALUE_SEPARATOR, $this->getKeywords($publication, $locale)),
+                    trim(strip_tags((string) $publication->getLocalizedData('abstract', $locale))),
+                    $issue->getDatePublished(),
+                    $locale,
                     $section ? $section->getLocalizedTitle() : '',
-                    $publication->getData('datePublished'),
-                    $publication->getData('pages'),
-                    $publication->getData('locale'),
-                    implode('; ', $zipFileNames),
+                    $publication->getData('licenseUrl'),
+                    'text',
+                    $context->getLocalizedName() . ', ' . $issue->getIssueIdentification(),
                 ]);
             }
-        }
 
-        rewind($csv);
-        $zip->addFromString('metadata.csv', stream_get_contents($csv));
-        fclose($csv);
+            rewind($csv);
+            $zip->addFromString($issueDir . '/metadata.csv', stream_get_contents($csv));
+            fclose($csv);
+        }
 
         if (!$zip->close()) {
             throw new \RuntimeException(__('plugins.importexport.OJSFlatMetadataExporter.export.zipError'));
         }
+    }
+
+    /**
+     * Get the keywords of a publication in the given locale as plain strings.
+     *
+     * @return string[]
+     */
+    protected function getKeywords($publication, ?string $locale): array
+    {
+        $keywords = $publication->getData('keywords')[$locale] ?? [];
+        $names = [];
+        foreach ($keywords as $keyword) {
+            $name = is_array($keyword) ? ($keyword['name'] ?? '') : (string) $keyword;
+            if ($name !== '') {
+                $names[] = $name;
+            }
+        }
+        return $names;
     }
 
     /**
