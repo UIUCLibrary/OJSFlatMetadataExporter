@@ -2,9 +2,12 @@
 
 namespace APP\plugins\importexport\OJSFlatMetadataExporter;
 
-use APP\plugins\importexport\native\NativeImportExportPlugin;
+use APP\core\Application;
+use APP\facades\Repo;
+use PKP\plugins\ImportExportPlugin;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class OJSFlatMetadataExporterPlugin extends NativeImportExportPlugin
+class OJSFlatMetadataExporterPlugin extends ImportExportPlugin
 {
     /**
      * @copydoc Plugin::register()
@@ -12,6 +15,9 @@ class OJSFlatMetadataExporterPlugin extends NativeImportExportPlugin
     public function register($category, $path, $mainContextId = null)
     {
         $success = parent::register($category, $path, $mainContextId);
+        // This is the critical line that was missing. It explicitly tells the plugin
+        // its own location, which is required for the TemplateManager to find templates.
+        $this->setPath(dirname(__FILE__));
         $this->addLocaleData();
         return $success;
     }
@@ -41,37 +47,62 @@ class OJSFlatMetadataExporterPlugin extends NativeImportExportPlugin
     }
 
     /**
-     * @copydoc ImportExportPlugin::display()
+     * @copydoc Plugin::display()
      */
     public function display($args, $request)
     {
-        return parent::display($args, $request);
+        parent::display($args, $request);
+
+        $context = $request->getContext();
+        $templateMgr = \APP\template\TemplateManager::getManager($request);
+        $opType = $request->getRouter()->getRequestedOp($request);
+
+        switch ($opType) {
+            case 'export':
+                $request->redirect(null, null, 'importexport', ['plugin', $this->getName()]);
+                return;
+
+            case 'index':
+            case null:
+                $issueCollector = Repo::issue()->getCollector()
+                    ->filterByContextIds([$context->getId()])
+                    ->filterByPublished(true)
+                    ->orderBy('datePublished', 'desc');
+
+                $issuesFromDb = $issueCollector->getMany();
+
+                $issuesForTemplate = [];
+                foreach ($issuesFromDb as $issue) {
+                    $issuesForTemplate[] = (object) [
+                        'id' => $issue->getId(),
+                        'title' => $issue->getLocalizedTitle(),
+                    ];
+                }
+
+                $templateMgr->assign('issues', $issuesForTemplate);
+                $templateMgr->display($this->getTemplateResource('index.tpl'));
+                return;
+
+            default:
+                throw new NotFoundHttpException();
+        }
     }
 
     /**
-     * Get the export result for a command-line export
-     *
-     * @param string $command
-     * @param array $cliArgs
-     * @param string $workPath
-     * @return ?string Path to the created file or null
+     * @copydoc ImportExportPlugin::executeCLI()
      */
-    public function getCLIExportResult(string $command, array $cliArgs, string $workPath): ?string
+    public function executeCLI($scriptName, &$args)
     {
-        return null;
+        $this->usage($scriptName);
     }
 
     /**
-     * Get the export result for a web-based export
-     *
-     * @param \PKP\core\PKPRequest $request
-     * @param string $command
-     * @param array $selectedIds
-     * @param string $workPath
-     * @return ?string Path to the created file or null
+     * @copydoc ImportExportPlugin::usage()
      */
-    public function getExportResult(\PKP\core\PKPRequest $request, string $command, array $selectedIds, string $workPath): ?string
+    public function usage($scriptName)
     {
-        return null;
+        echo __("plugins.importexport.OJSFlatMetadataExporter.cliUsage", [
+            'scriptName' => $scriptName
+        ]) . "\n";
     }
 }
